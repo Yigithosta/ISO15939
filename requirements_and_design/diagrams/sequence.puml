@@ -1,0 +1,106 @@
+@startuml Sequence_Diagram
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+  ActorBackgroundColor #D6E8FF
+  ActorBorderColor #2166AC
+  ParticipantBackgroundColor #EEF4FF
+  ParticipantBorderColor #2166AC
+  LifeLineBorderColor #90A4AE
+  ArrowColor #2166AC
+  BoxBackgroundColor #F5F9FF
+  BoxBorderColor #2166AC
+}
+skinparam FontSize 13
+
+title ISO 15939 Measurement Process Simulator — Sequence Diagram
+
+actor       "User"                as U
+participant "MainFrame\n(Wizard)" as MF
+participant "ProfilePanel\n(Step 1)" as PP
+participant "DefinePanel\n(Step 2)"  as DP
+participant "PlanPanel\n(Step 3)"    as PLP
+participant "CollectPanel\n(Step 4)" as CP
+participant "AnalysePanel\n(Step 5)" as AP
+participant "ScenarioRepository" as SR
+participant "MeasurementSession" as MS
+participant "Metric / Dimension"  as MD
+
+== Step 1: Profile ==
+U -> MF : launch app
+MF -> PP : show ProfilePanel
+U -> PP : enter Username, School, Session Name
+PP -> PP : validate fields
+alt fields missing
+  PP -> U : showWarningDialog(field-specific message)
+else all filled
+  PP -> MS : setProfile(UserProfile)
+  PP -> MF : goToStep(1)
+end
+
+== Step 2: Define ==
+MF -> DP : show DefinePanel
+U -> DP : select Quality Type (Product/Process)
+U -> DP : select Mode (Health/Education)
+DP -> SR : getScenarioNames(mode)
+SR --> DP : List<String> scenarioNames
+DP -> DP : rebuild scenario radio buttons
+U -> DP : select Scenario
+DP -> SR : findScenario(mode, scenarioName)
+SR --> DP : Scenario object
+DP -> MS : setQualityType(), setMode(), setScenario()
+DP -> MF : goToStep(2)
+
+== Step 3: Plan ==
+MF -> PLP : show PlanPanel + refresh(session)
+PLP -> MS : getScenario()
+MS --> PLP : Scenario
+PLP -> MD : getDimensions() / getMetrics()
+MD --> PLP : dimension & metric data
+PLP -> U : render read-only table\n(Metric, Coefficient, Direction, Range, Unit)
+U -> PLP : click Next
+PLP -> MF : goToStep(3)
+
+== Step 4: Collect ==
+MF -> CP : show CollectPanel + refresh(session)
+CP -> MS : getScenario()
+MS --> CP : Scenario
+loop for each Metric
+  CP -> MD : getValue(), calculateScore()
+  MD --> CP : rawValue, score (1–5, rounded 0.5)
+end
+CP -> U : render Collect table\n(Value + colour-coded Score column)
+U -> CP : click Analyse
+CP -> MF : goToStep(4)
+
+== Step 5: Analyse ==
+MF -> AP : show AnalysePanel + refresh(session)
+AP -> MS : getScenario()
+MS --> AP : Scenario
+
+group 5a — Weighted Averages
+  loop for each Dimension
+    AP -> MD : calculateScore()\n[Σ(metricScore×coeff)/Σ(coeff)]
+    MD --> AP : dimensionScore
+    AP -> U : render JProgressBar
+  end
+end
+
+group 5b — Radar Chart (Bonus)
+  AP -> AP : create RadarChartPanel(labels, scores)
+  AP -> U : paintComponent() — draw spider polygon\nvia Graphics2D
+end
+
+group 5c — Gap Analysis
+  AP -> AP : find dimension with min score
+  AP -> AP : gap = 5.0 − minScore\nqualityLevel = Excellent/Good/Needs Improvement/Poor
+  AP -> U : render gap analysis panel
+end
+
+alt User clicks New Session
+  U -> AP : click "New Session"
+  AP -> MF : resetSession()
+  MF -> PP : clearFields()
+  MF -> U : show Step 1 — Profile
+end
+@enduml

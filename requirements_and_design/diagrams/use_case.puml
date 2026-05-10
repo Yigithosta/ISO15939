@@ -1,0 +1,95 @@
+@startuml Use_Case_Diagram
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor #2166AC
+  FontSize 13
+}
+skinparam actor {
+  BackgroundColor #D6E8FF
+  BorderColor #2166AC
+}
+skinparam ArrowColor #2166AC
+skinparam packageBorderColor #2166AC
+skinparam packageBackgroundColor #F5F9FF
+
+title ISO 15939 Measurement Process Simulator — Use Case Diagram
+
+actor "User" as U
+
+rectangle "ISO 15939 Measurement Process Simulator" {
+
+  package "Step 1: Profile" {
+    usecase "UC1: Enter Username"        as UC1
+    usecase "UC2: Enter School"          as UC2
+    usecase "UC3: Enter Session Name"    as UC3
+    usecase "UC4: Validate Profile Fields" as UC4
+  }
+
+  package "Step 2: Define" {
+    usecase "UC5: Select Quality Type\n(Product / Process)"   as UC5
+    usecase "UC6: Select Mode\n(Health / Education)"          as UC6
+    usecase "UC7: Select Scenario"                            as UC7
+  }
+
+  package "Step 3: Plan" {
+    usecase "UC8: View Dimensions & Metrics\n(Read-Only Table)" as UC8
+  }
+
+  package "Step 4: Collect" {
+    usecase "UC9: View Raw Data Values"       as UC9
+    usecase "UC10: Auto-Calculate Score (1–5)" as UC10
+  }
+
+  package "Step 5: Analyse" {
+    usecase "UC11: View Dimension\nWeighted Averages (JProgressBar)" as UC11
+    usecase "UC12: View Radar Chart (Bonus)"                         as UC12
+    usecase "UC13: View Gap Analysis"                                as UC13
+    usecase "UC14: Start New Session"                                as UC14
+  }
+}
+
+U --> UC1
+U --> UC2
+U --> UC3
+UC1 .> UC4 : <<include>>
+UC2 .> UC4 : <<include>>
+UC3 .> UC4 : <<include>>
+
+U --> UC5
+U --> UC6
+U --> UC7
+UC6 .> UC7 : <<include>>
+
+U --> UC8
+
+U --> UC9
+UC9 .> UC10 : <<include>>
+
+U --> UC11
+U --> UC12
+U --> UC13
+U --> UC14
+
+UC10 .> UC11 : <<extend>>
+
+note right of UC4
+  If any field is empty,
+  a warning dialog is shown.
+end note
+
+note right of UC10
+  Formula applied per metric:
+  Higher: 1+(v-min)/(max-min)×4
+  Lower:  5-(v-min)/(max-min)×4
+  Rounded to nearest 0.5
+end note
+
+note right of UC13
+  Identifies dimension with
+  lowest score; shows gap,
+  quality level, and message.
+end note
+@enduml
