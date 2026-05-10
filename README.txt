@@ -3,7 +3,7 @@
   Java Swing Desktop Application
 ================================================================================
 
-Student Name  : [YOUR NAME HERE]
+Student Name  : [YİĞİT AHMET HOSTA
 Student ID    : [YOUR ID HERE]
 Course        : Software Project II
 Assignment    : Individual Project – ISO/IEC 15939 Simulator
